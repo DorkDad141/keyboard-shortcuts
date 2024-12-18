@@ -113,13 +113,6 @@ function Controller.key_press_update(self, key, dt)
             left5()
         elseif key == "right" then
             right5()
-        elseif key == "m" then
-            for i = 1, 2 do
-              local card = create_card('Tarot', G.consumeables, nil, nil, nil, nil, 'c_death', 'emp')
-              -- card:add_to_deck()
-              -- G.consumeables:emplace(card)
-            end
-        end
     end
 end
 
