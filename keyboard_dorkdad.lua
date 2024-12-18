@@ -6,7 +6,7 @@
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
-local suits = { 'Hearts', 'Clubs', 'Diamonds', 'Spades'};
+local suits = { 'Hearts', 'Clubs', 'Diamonds', 'Spades'}
 
 local keyupdate_ref = Controller.key_press_update
 function Controller.key_press_update(self, key, dt)
@@ -168,105 +168,148 @@ function next_best_oak(possible_hands, curr_hand)
 end
 
 function ranked_hands(cards)
-  local fives, fours, trips, twos = {}, {}, {}, {}
-  local rank_counts = {}
-  for i, card in pairs(cards) do
-    local rank = get_visible_rank(card)
-    if not (rank == "stone") then
-      if not rank_counts[rank] then
-        rank_counts[rank] = {}
-      end
-      table.insert(rank_counts[rank], card)
-    end
-  end
-  for k, v in pairs(rank_counts) do
-    table.sort(v, function(x, y) return calculate_importance(x, true) > calculate_importance(y, true) end)
-    if #v >= 5 then
-      table.insert(fives, take(v, 5))
-    end
-    if #v >= 4 then
-      table.insert(fours, take(v, 4))
-    end
-    if #v >= 3 then
-      table.insert(trips, take(v, 3))
-    end
-    if #v >= 2 then
-      table.insert(twos, take(v, 2))
-    end
-  end
+    local fives, fours, trips, twos = {}, {}, {}, {}
+    local rank_counts = {}
+    local four_fingers = next(find_joker("Four Fingers"))
+    local smeared_joker = next(find_joker("Smeared Joker"))
+    -- local shortcut = next(find_joker('Shortcut'))
 
-  local full_houses = {}  
-  for i = 1, #trips do
-    for j = 1, #twos do
-      if get_visible_rank(trips[i][1]) ~= get_visible_rank(twos[j][1]) then
-        table.insert(full_houses, merge(trips[i], twos[j]))
-      end
-    end
-  end
-
-  local two_pairs = {}
-  for i = 1, (#twos - 1) do
-    for j = i + 1, #twos do
-      table.insert(two_pairs, add_stone(merge(twos[i], twos[j])))
-    end
-  end
-
-  -- add stone cards to hands
-  for i = 1, #twos do
-    twos[i] = add_stone(twos[i])
-  end
-  for i = 1, #trips do
-    trips[i] = add_stone(trips[i])
-  end
-  for i = 1, #fours do
-    fours[i] = add_stone(fours[i])
-  end
-
-  local straights = {}
-  for i = 1, 10 do
-    has_straight = 1
-    straight = {}
-    for j = i, i+4 do
-      actual_rank = j
-      if j == 1 then actual_rank = 14 end -- handle the wheel
-        if not rank_counts[actual_rank] then
-            has_straight = 0
-            break
-        else 
-           table.insert(straight, rank_counts[actual_rank][1])
+    for i, card in pairs(cards) do
+        local rank = get_visible_rank(card)
+        if not (rank == "stone") then
+            if not rank_counts[rank] then
+                rank_counts[rank] = {}
+            end
+            table.insert(rank_counts[rank], card)
         end
     end
-    if has_straight == 1 then
-        table.insert(straights, straight)
+    for k, v in pairs(rank_counts) do
+        table.sort(v, function(x, y)
+            return calculate_importance(x, true) > calculate_importance(y, true)
+        end)
+        if #v >= 5 then
+            table.insert(fives, take(v, 5))
+        end
+        if #v >= 4 then
+            table.insert(fours, take(v, 4))
+        end
+        if #v >= 3 then
+            table.insert(trips, take(v, 3))
+        end
+        if #v >= 2 then
+            table.insert(twos, take(v, 2))
+        end
     end
-  end
 
-  local flushes = {}
-  for i = 1, 4 do
-    cards = sorted_cards_by_suit(suits[i])
-    if #cards >= 5 then
-      table.insert(flushes, take(cards, 5))
+    local full_houses = {}
+    for i = 1, #trips do
+        for j = 1, #twos do
+            if get_visible_rank(trips[i][1]) ~= get_visible_rank(twos[j][1]) then
+                table.insert(full_houses, merge(trips[i], twos[j]))
+            end
+        end
     end
-  end
 
-  table.sort(fives, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(fours, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(flushes, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(straights, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(trips, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(full_houses, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(two_pairs, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  table.sort(twos, function(x, y) return hand_importance(x) > hand_importance(y) end)
-  local res = {}
-  res = merge(res, fives)
-  res = merge(res, fours)
-  res = merge(res, full_houses)
-  res = merge(res, flushes)
-  res = merge(res, straights)
-  res = merge(res, trips)
-  res = merge(res, two_pairs)
-  res = merge(res, twos)
-  return res
+    local two_pairs = {}
+    for i = 1, (#twos - 1) do
+        for j = i + 1, #twos do
+            table.insert(two_pairs, add_stone(merge(twos[i], twos[j])))
+        end
+    end
+
+    -- add stone cards to hands
+    for i = 1, #twos do
+        twos[i] = add_stone(twos[i])
+    end
+    for i = 1, #trips do
+        trips[i] = add_stone(trips[i])
+    end
+    for i = 1, #fours do
+        fours[i] = add_stone(fours[i])
+    end
+
+    local straights = {}
+    for i = 1, 10 do
+        has_straight = 1
+        straight = {}
+        for j = i, i + 4 do
+            actual_rank = j
+            if j == 1 then
+                actual_rank = 14
+            end -- handle The Wheel blind
+            if rank_counts[actual_rank] then
+                table.insert(straight, rank_counts[actual_rank][1])
+            elseif four_fingers and rank_counts[actual_rank - 1] then
+                table.insert(straight, rank_counts[actual_rank - 1][1])
+            else
+                has_straight = 0
+                break
+            end
+        end
+
+        if has_straight == 1 then
+            table.insert(straights, straight)
+        end
+    end
+
+    local cards_by_suit = (
+        smeared_joker
+        and {
+            sorted_cards_by_suit("Spades", "Clubs"),
+            sorted_cards_by_suit("Hearts", "Diamonds"),
+        }
+    )
+        or {
+            sorted_cards_by_suit(suits[1]),
+            sorted_cards_by_suit(suits[2]),
+            sorted_cards_by_suit(suits[3]),
+            sorted_cards_by_suit(suits[4]),
+        }
+
+    local flushes = {}
+    for _, sorted_flush in ipairs(cards_by_suit) do
+        if #sorted_flush >= 5 then
+            table.insert(flushes, take(sorted_flush, 5))
+        end
+        if four_fingers and #sorted_flush >= 4 then
+            table.insert(flushes, take(sorted_flush, 4))
+        end
+    end
+
+    table.sort(fives, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(fours, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(flushes, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(straights, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(trips, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(full_houses, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(two_pairs, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    table.sort(twos, function(x, y)
+        return hand_importance(x) > hand_importance(y)
+    end)
+    local res = {}
+    res = merge(res, fives)
+    res = merge(res, fours)
+    res = merge(res, full_houses)
+    res = merge(res, flushes)
+    res = merge(res, straights)
+    res = merge(res, trips)
+    res = merge(res, two_pairs)
+    res = merge(res, twos)
+    return res
 end
 
 -- add as many stones as will fit into the current set of cards
@@ -417,38 +460,63 @@ function best_flush_suit()
     return best_suit
 end
 
-function sorted_cards_by_suit(suit)
+function sorted_cards_by_suit(...)
     local cards = {}
     local count = 0
-    for i = 1, #G.hand.cards do
-        card = G.hand.cards[i]
-        if get_visible_suit(card) == suit or get_visible_suit(card) == "Wild" then
-            table.insert(cards, card)
-            count = count + 1
+    local suits = { ... }
+    for _, suit in pairs(suits) do
+        for i = 1, #G.hand.cards do
+            card = G.hand.cards[i]
+            if get_visible_suit(card) == suit or get_visible_suit(card) == "Wild" then
+                table.insert(cards, card)
+                count = count + 1
+            end
         end
     end
-    table.sort(cards, function(x, y) return calculate_importance(x, true) > calculate_importance(y, true) end)
+    table.sort(cards, function(x, y)
+        return calculate_importance(x, true) > calculate_importance(y, true)
+    end)
     return cards
 end
 
 function flush(suit)
     G.hand:unhighlight_all()
 
-    cards = sorted_cards_by_suit(suit)
+    local four_fingers = next(find_joker("Four Fingers"))
+    local smeared_joker = next(find_joker("Smeared Joker"))
+
+    local cards = {}
+
+    if smeared_joker then
+        if suit == "Spades" or suit == "Clubs" then
+            cards = sorted_cards_by_suit("Spades", "Clubs")
+        end
+        if suit == "Hearts" or suit == "Diamonds" then
+            cards = sorted_cards_by_suit("Hearts", "Diamonds")
+        end
+    else
+        cards = sorted_cards_by_suit(suit)
+    end
 
     if #cards >= 5 then
         cards = take(cards, 5)
         select_hand(cards)
         G.FUNCS.play_cards_from_highlighted()
-    else 
-      cards = {}
-      for i = #G.hand.cards, 1, -1 do
+    elseif four_fingers and #cards >= 4 then
+        cards = take(cards, 4)
+        select_hand(cards)
+        G.FUNCS.play_cards_from_highlighted()
+    else
+        cards = {}
+        for i = #G.hand.cards, 1, -1 do
             card = G.hand.cards[i]
             if get_visible_suit(card) ~= suit and get_visible_suit(card) ~= "Wild" then
-              table.insert(cards, card)
+                table.insert(cards, card)
             end
         end
-        table.sort(cards, function(x, y) return calculate_importance(x, false) > calculate_importance(y, false) end)
+        table.sort(cards, function(x, y)
+            return calculate_importance(x, false) > calculate_importance(y, false)
+        end)
         cards = take(cards, 5)
         select_hand(cards)
         discard_or_play()
