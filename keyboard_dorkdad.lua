@@ -113,6 +113,7 @@ function Controller.key_press_update(self, key, dt)
             left5()
         elseif key == "right" then
             right5()
+        end
     end
 end
 
