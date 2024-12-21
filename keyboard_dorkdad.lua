@@ -443,20 +443,44 @@ end
 
 function best_flush_suit()
     local best_score = 0
-    local score_for_suit = {}
     local best_suit = 'Hearts'
-    for i = 1, 4 do
-        local suit = suits[i]
-        local cards = sorted_cards_by_suit(suit)
-        local score = 1000 * #cards
-        local importance_score = hand_importance(take(cards, 5))
-        score = score + hand_importance(take(cards, 5))
-        score_for_suit[suit] = score
-        if score > best_score then
-            best_score = score
-            best_suit = suit
+
+    local smeared_joker = next(find_joker("Smeared Joker"))
+    local four_fingers = next(find_joker("Four Fingers"))
+
+    local cards_by_suit = (
+        smeared_joker
+        and {
+            Hearts = sorted_cards_by_suit("Hearts", "Diamonds"),
+            Clubs = sorted_cards_by_suit("Spades", "Clubs"),
+        }
+    )
+        or {
+            Hearts   = sorted_cards_by_suit(suits[1]),
+            Clubs    = sorted_cards_by_suit(suits[2]),
+            Diamonds = sorted_cards_by_suit(suits[3]),
+            Spades   = sorted_cards_by_suit(suits[4]),
+        }
+    for suit, sorted_flush in pairs(cards_by_suit) do
+        local base_score = 1000 * #sorted_flush
+        local hands_to_check = {}
+
+        if #sorted_flush >= 5 then
+            table.insert(hands_to_check, take(sorted_flush, 5))
+        end
+        if four_fingers and #sorted_flush >= 4 then
+            table.insert(hands_to_check, take(sorted_flush, 4))
+        end
+
+        for _, hand in pairs(hands_to_check) do
+            local score = base_score + hand_importance(hand) 
+            if score > best_score then
+                best_score = score
+                best_suit = suit
+            end
         end
     end
+
     return best_suit
 end
 
