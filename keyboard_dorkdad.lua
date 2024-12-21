@@ -485,23 +485,27 @@ function best_flush_suit()
 end
 
 function sorted_cards_by_suit(...)
+    local args = { ... }
+    -- Additionally, include any wild cards in hand
+    local suits = { Wild = true }
+    for _, suit in pairs(args) do
+        suits[suit] = true
+    end
+
     local cards = {}
-    local count = 0
-    local suits = { ... }
-    for _, suit in pairs(suits) do
-        for i = 1, #G.hand.cards do
-            card = G.hand.cards[i]
-            if get_visible_suit(card) == suit or get_visible_suit(card) == "Wild" then
-                table.insert(cards, card)
-                count = count + 1
-            end
+    for i = 1, #G.hand.cards do
+        local card = G.hand.cards[i]
+        if suits[get_visible_suit(card)] then
+            table.insert(cards, card)
         end
     end
+
     table.sort(cards, function(x, y)
         return calculate_importance(x, true) > calculate_importance(y, true)
     end)
     return cards
 end
+
 
 function flush(suit)
     G.hand:unhighlight_all()
