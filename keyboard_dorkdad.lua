@@ -53,7 +53,10 @@ function Controller.key_press_update(self, key, dt)
 
     if G.STATE == G.STATES.ROUND_EVAL then
         if key == "space" then
-       --     G.FUNCS.cash_out(G.shop:get_UIE_by_ID('cash_out_button'))
+            G.FUNCS.cash_out(
+                G.shop and G.shop:get_UIE_by_ID("cash_out_button")
+                    or { config = { button = {} } }
+            )
         end
     elseif G.STATE == G.STATES.BLIND_SELECT then
         if key == "space" then
