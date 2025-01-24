@@ -7,6 +7,10 @@ Many keyboard shortcuts for the game  [Balatro](https://store.steampowered.com/a
 
 ### Space - Next Hand
 
+## Round Eval Screen
+
+### Space - Cash Out
+
 ## Playing Cards
 
 ### QOL Keys
