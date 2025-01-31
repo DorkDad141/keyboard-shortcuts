@@ -7,6 +7,12 @@ Many keyboard shortcuts for the game  [Balatro](https://store.steampowered.com/a
 
 ### Space - Next Hand
 
+## Blind Select Screen
+
+### Space - Select Blind
+
+### S - Skip Blind
+
 ## Round Eval Screen
 
 ### Space - Cash Out
