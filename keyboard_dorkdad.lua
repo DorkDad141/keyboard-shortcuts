@@ -60,9 +60,14 @@ function Controller.key_press_update(self, key, dt)
         end
     elseif G.STATE == G.STATES.BLIND_SELECT then
         if key == "space" then
-       --     G.FUNCS.toggle_shop(1)
+            G.FUNCS.select_blind(
+                G.blind_select_opts[string.lower(G.GAME.blind_on_deck)]:get_UIE_by_ID("select_blind_button")
+            )
+
         elseif key == "s" then
-       --     G.FUNCS.skip_blind(G.shop:get_UIE_by_ID('skip_blind'))
+            G.FUNCS.skip_blind(
+                G.blind_select_opts[string.lower(G.GAME.blind_on_deck)]:get_UIE_by_ID("blind_extras")
+            )
         end
 
     elseif G.STATE == G.STATES.SHOP then
