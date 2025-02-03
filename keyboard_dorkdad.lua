@@ -8,6 +8,18 @@
 
 local suits = { 'Hearts', 'Clubs', 'Diamonds', 'Spades'}
 
+G.ORPHANED_UIBOXES = {}
+local uibox_init_impl = UIBox.init
+function UIBox.init(self, args)
+   if not args.config.parent then G.ORPHANED_UIBOXES[self] = true end
+   return uibox_init_impl(self, args)
+end
+local uibox_remove_impl = UIBox.remove
+function UIBox.remove(self)
+   G.ORPHANED_UIBOXES[self] = nil
+   return uibox_remove_impl(self)
+end
+
 local keyupdate_ref = Controller.key_press_update
 function Controller.key_press_update(self, key, dt)
     keyupdate_ref(self, key, dt)
@@ -53,11 +65,16 @@ function Controller.key_press_update(self, key, dt)
 
     if G.STATE == G.STATES.ROUND_EVAL then
         if key == "space" then
-            G.FUNCS.cash_out(
-                G.shop and G.shop:get_UIE_by_ID("cash_out_button")
-                    or { config = { button = {} } }
-            )
+            local cash_out_button
+            for e, _ in pairs(G.ORPHANED_UIBOXES) do
+                cash_out_button = e:get_UIE_by_ID("cash_out_button")
+                if cash_out_button then
+                    G.FUNCS.cash_out(cash_out_button)
+                    return
+                end
+            end
         end
+
     elseif G.STATE == G.STATES.BLIND_SELECT then
         if key == "space" then
             G.FUNCS.select_blind(
@@ -76,7 +93,6 @@ function Controller.key_press_update(self, key, dt)
         elseif key == "space" then
             G.FUNCS.toggle_shop(1)
         end
-
 
     elseif G.STATE == G.STATES.SELECTING_HAND then
         if tableContains(keys_to_nums, key) then
